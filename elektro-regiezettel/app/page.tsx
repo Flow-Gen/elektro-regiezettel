@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -582,6 +582,18 @@ export default function ElektroRegiezettel() {
   const [loadingPDF, setLoadingPDF]   = useState(false)
   const [loadingCheckout, setLoadingCheckout] = useState(false)
   const [previewDone, setPreviewDone] = useState(false)
+  // Zahlung nur über Stripe success_url bestätigt — URL-Parameter prüfen
+  const [paid, setPaid] = useState(false)
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search)
+      if (params.get('paid') === 'true') {
+        setPaid(true)
+        setPreviewDone(true)
+      }
+    }
+  }, [])
 
   const ergebnis = calcErgebnis(data)
 
@@ -614,16 +626,11 @@ export default function ElektroRegiezettel() {
     setData(prev => ({ ...prev, positionen: prev.positionen.filter(p => p.id !== id) }))
   }
 
-  // ── Free preview: Brutto anzeigen, dann Paywall ──
+  // ── Free preview: Kalkulation ist immer sichtbar, Paywall beim PDF-Versuch ──
   const handleVorschau = () => {
-    if (!hasUsedFree) {
-      setHasUsedFree(true)
-      setPreviewDone(true)
-      // Nach 2 Sekunden Paywall zeigen
-      setTimeout(() => setShowPaywall(true), 2000)
-    } else {
-      setShowPaywall(true)
-    }
+    setHasUsedFree(true)
+    // Kurze Verzögerung damit User die Zahlen sieht, dann Paywall
+    setTimeout(() => setShowPaywall(true), 1500)
   }
 
   // ── Stripe Checkout ──
@@ -1045,7 +1052,7 @@ export default function ElektroRegiezettel() {
                 <span style={S.resultTotalValue}>{fmtEur(ergebnis.brutto)}</span>
               </div>
 
-              {previewDone && !showPaywall ? (
+              {paid ? (
                 <>
                   <button style={S.btnPrimary} onClick={handlePDFDownload} disabled={loadingPDF}>
                     {loadingPDF ? 'PDF wird erstellt...' : '↓ PDF herunterladen'}
@@ -1057,13 +1064,18 @@ export default function ElektroRegiezettel() {
               ) : (
                 <>
                   <button style={S.btnPrimary} onClick={handleVorschau}>
-                    Kostenlose Vorschau
+                    {hasUsedFree ? 'PDF kaufen — 7,00 €' : 'Kostenlose Vorschau'}
                   </button>
-                  <button style={S.btnSecondary} onClick={() => setShowPaywall(true)}>
-                    PDF kaufen — 7,00 €
-                  </button>
+                  {!hasUsedFree && (
+                    <button style={S.btnSecondary} onClick={() => setShowPaywall(true)}>
+                      PDF kaufen — 7,00 €
+                    </button>
+                  )}
                   <p style={S.priceNote}>
-                    1× kostenlose Vorschau · PDF-Export für 7 €<br />einmalig, kein Abo
+                    {hasUsedFree
+                      ? 'Kalkulation ist fertig — PDF für 7 € freischalten'
+                      : '1× kostenlose Vorschau · PDF-Export für 7 €\neinmalig, kein Abo'
+                    }
                   </p>
                 </>
               )}
