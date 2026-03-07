@@ -7,12 +7,12 @@ import { Suspense } from 'react'
 function SuccessContent() {
   const params    = useSearchParams()
   const sessionId = params.get('session_id')
-  const [verified, setVerified] = useState(false)
 
   useEffect(() => {
-    // In Produktion: Session-ID gegen Stripe verifizieren
-    // Für MVP: URL-Parameter reicht als Nachweis
-    if (sessionId) setVerified(true)
+    if (sessionId) {
+      localStorage.setItem('rz_paid', 'true')
+      localStorage.setItem('rz_session', sessionId)
+    }
   }, [sessionId])
 
   return (
@@ -26,7 +26,6 @@ function SuccessContent() {
       justifyContent: 'center',
       padding: '2rem',
     }}>
-      {/* Header */}
       <div style={{
         background: '#1A1A1A',
         width: '100%',
@@ -54,47 +53,35 @@ function SuccessContent() {
         marginTop: '4rem',
         textAlign: 'center',
       }}>
-        <div style={{
-          fontSize: '3rem',
-          marginBottom: '1rem',
-        }}>⚡</div>
+        <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>⚡</div>
 
         <h1 style={{
           fontFamily: "'Barlow Condensed', sans-serif",
-          fontSize: '2rem',
-          fontWeight: 800,
-          color: '#FFFFFF',
-          marginBottom: '0.75rem',
-          lineHeight: 1.1,
+          fontSize: '2rem', fontWeight: 800,
+          color: '#FFFFFF', marginBottom: '0.75rem', lineHeight: 1.1,
         }}>
           Zahlung erfolgreich!
         </h1>
 
         <p style={{
-          fontSize: '0.9rem',
-          color: '#888',
-          lineHeight: 1.7,
-          marginBottom: '2.5rem',
+          fontSize: '0.9rem', color: '#888',
+          lineHeight: 1.7, marginBottom: '2.5rem',
         }}>
           Danke für deinen Kauf. Gehe zurück zum Rechner um dein PDF zu generieren.
           Der Button ist jetzt freigeschaltet.
         </p>
 
-        <a
-          href="/handwerk/elektro-regiezettel"
+        
+          href="/?paid=true"
           style={{
             display: 'block',
             background: '#F5C518',
             border: 'none',
             padding: '1rem',
             fontFamily: "'Barlow Condensed', sans-serif",
-            fontSize: '1rem',
-            fontWeight: 800,
-            letterSpacing: '0.12em',
-            textTransform: 'uppercase',
-            color: '#1A1A1A',
-            cursor: 'pointer',
-            textDecoration: 'none',
+            fontSize: '1rem', fontWeight: 800,
+            letterSpacing: '0.12em', textTransform: 'uppercase',
+            color: '#1A1A1A', cursor: 'pointer', textDecoration: 'none',
           }}
         >
           ← Zurück zum Regiezettel & PDF erstellen
@@ -103,10 +90,8 @@ function SuccessContent() {
         {sessionId && (
           <p style={{
             fontFamily: "'Barlow Condensed', sans-serif",
-            fontSize: '0.62rem',
-            color: '#444',
-            marginTop: '1.5rem',
-            letterSpacing: '0.08em',
+            fontSize: '0.62rem', color: '#444',
+            marginTop: '1.5rem', letterSpacing: '0.08em',
           }}>
             Bestellnummer: {sessionId.slice(-12).toUpperCase()}
           </p>
